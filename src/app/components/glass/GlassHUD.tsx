@@ -50,25 +50,68 @@ export function GlassHUD() {
     []
   );
 
-  const advanceSlice = useCallback(() => {
-    setCurrentSliceIndex((prev) => {
-      const next = prev + 1;
-      if (next >= interaction.heartbeatSlices.length) {
-        setPlayState("paused");
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        return prev;
+  const togglePlayPause = useCallback(() => {
+    setPlayState((prev) => {
+      if (prev === "playing") {
+        // "Stop" functionality - full reset to beginning
+        setCurrentTranscriptIndex(-1);
+        setCurrentSliceIndex(-1);
+        setActiveNudge(null);
+        setShowBreathing(false);
+        return "paused";
+      } else {
+        // "Play" — if at beginning (index -1), start from 0
+        if (currentTranscriptIndex === -1) {
+          setCurrentTranscriptIndex(0);
+          setCurrentSliceIndex(0);
+        }
+        return "playing";
       }
+    });
+  }, [currentTranscriptIndex]);
 
-      const slice = interaction.heartbeatSlices[next];
+  // Use a sequencer pattern for ultra-stable, slow playback
+  useEffect(() => {
+    if (playState !== "playing") return;
+    
+    // Safety check for end of transcript
+    if (currentTranscriptIndex >= interaction.transcript.length - 1) {
+      setPlayState("paused");
+      return;
+    }
 
-      // advance transcript to match
-      const transcriptTarget = Math.min(
-        Math.floor((next / interaction.heartbeatSlices.length) * interaction.transcript.length),
-        interaction.transcript.length - 1
-      );
-      setCurrentTranscriptIndex(transcriptTarget);
+    const targetIndex = currentTranscriptIndex;
 
-      // determine nudge
+    const timer = setTimeout(() => {
+      setCurrentTranscriptIndex((prev) => {
+        // Strict guard: only increment if we are exactly where we expect to be
+        if (prev === targetIndex) {
+          const next = prev + 1;
+          if (next >= interaction.transcript.length) {
+            setPlayState("paused");
+            return prev;
+          }
+          return next;
+        }
+        return prev;
+      });
+    }, 6000); // 6 seconds between lines — readable pacing for demo
+
+    return () => clearTimeout(timer);
+  }, [playState, currentTranscriptIndex, interaction.transcript.length, interaction]);
+
+  // Sync biometric slice with transcript index
+  useEffect(() => {
+    if (currentTranscriptIndex < 0) return;
+    
+    const sliceTarget = Math.min(
+      Math.floor((currentTranscriptIndex / interaction.transcript.length) * interaction.heartbeatSlices.length),
+      interaction.heartbeatSlices.length - 1
+    );
+    setCurrentSliceIndex(sliceTarget);
+
+    const slice = interaction.heartbeatSlices[sliceTarget];
+    if (slice) {
       const nudge = determineNudge(slice);
       if (nudge) {
         setActiveNudge(nudge);
@@ -78,51 +121,35 @@ export function GlassHUD() {
         }
         setTimeout(() => setActiveNudge(null), 3500);
       }
-
-      return next;
-    });
-  }, [interaction, determineNudge]);
-
-  // Keep ref in sync with latest advanceSlice to avoid stale closures in setInterval
-  useEffect(() => {
-    advanceRef.current = advanceSlice;
-  }, [advanceSlice]);
+    }
+  }, [currentTranscriptIndex, interaction, determineNudge]);
 
   const startPlayback = useCallback(() => {
-    setPlayState("playing");
     setCurrentSliceIndex(0);
     setCurrentTranscriptIndex(0);
+    setPlayState("playing");
+  }, []);
 
-    const firstSlice = interaction.heartbeatSlices[0];
-    const nudge = determineNudge(firstSlice);
-    if (nudge) {
-      setActiveNudge(nudge);
-      setTimeout(() => setActiveNudge(null), 3500);
-    }
-
-    intervalRef.current = setInterval(() => advanceRef.current(), 3000);
-  }, [interaction, determineNudge]);
-
-  // Auto-start playback on mount so the home page shows the active HUD immediately
-  const hasAutoStarted = useRef(false);
+  // Initial auto-start
   useEffect(() => {
-    if (!hasAutoStarted.current) {
-      hasAutoStarted.current = true;
+    const startTimer = setTimeout(() => {
       startPlayback();
-    }
-  }, [startPlayback]);
+    }, 500);
+    return () => clearTimeout(startTimer);
+  }, []);
 
   const skipToNext = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    setPlayState("paused");
     setCurrentSliceIndex(-1);
     setCurrentTranscriptIndex(-1);
     setActiveNudge(null);
     setShowBreathing(false);
+    // Explicitly reset interaction
     setCurrentInteractionIndex((prev) => (prev + 1) % allInteractions.length);
   }, []);
 
   const skipToPrev = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    setPlayState("paused");
     setCurrentSliceIndex(-1);
     setCurrentTranscriptIndex(-1);
     setActiveNudge(null);
@@ -132,30 +159,12 @@ export function GlassHUD() {
     );
   }, []);
 
-  // Auto-start when interaction changes (skip/prev)
+  // Handle interaction changes properly
   useEffect(() => {
-    if (hasAutoStarted.current && playState !== "playing") {
+    if (currentTranscriptIndex === -1) {
       startPlayback();
     }
-    // Only trigger on interaction change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentInteractionIndex]);
-
-  const togglePlayPause = useCallback(() => {
-    if (playState === "playing") {
-      setPlayState("paused");
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    } else if (playState === "paused") {
-      // If we are at the end, hitting play again could just skip to next, or do nothing.
-      // Let's just restart or skip to next if they try to play at the end.
-      if (currentSliceIndex >= interaction.heartbeatSlices.length - 1) {
-        skipToNext();
-      } else {
-        setPlayState("playing");
-        intervalRef.current = setInterval(() => advanceRef.current(), 3000);
-      }
-    }
-  }, [playState, currentSliceIndex, interaction.heartbeatSlices.length, skipToNext]);
+  }, [currentInteractionIndex, currentTranscriptIndex, startPlayback]);
 
   useEffect(() => {
     return () => {
@@ -244,20 +253,6 @@ export function GlassHUD() {
             transformOrigin: 'center bottom',
           }}
         >
-          {/* Top status bar — time, weather, mood, heart rate, interaction count */}
-          <AnimatePresence>
-            {hudVisible && playState !== "pre-interaction" && currentSlice && (
-              <TopStatusBar
-                time={interactionTime}
-                bpm={currentSlice.avgBpm}
-                baselineBpm={userProfile.baselineBpm}
-                emotionalState={currentSlice.emotionalState}
-                counterpartName={counterpart?.name || "Unknown"}
-                counterpartInteractionCount={counterpart?.interactionCount || 0}
-                satisfactionScore={satisfactionScore}
-              />
-            )}
-          </AnimatePresence>
         </div>
 
         {/* Bottom HUD group — warps slightly upward toward center */}
@@ -274,10 +269,10 @@ export function GlassHUD() {
             {hudVisible && playState !== "pre-interaction" && counterpart && (
               <ContextPanel
                 personName={counterpart.name}
-                relationshipType={counterpart.relationship}
+                relationshipType={counterpart.relationshipType}
                 lastInteraction={interaction.saveEvent ? "First meeting" : "2 days ago"}
-                interactionCount={Math.floor(Math.random() * 15) + 5}
-                tags={interaction.saveEvent ? ["⭐ Save Moment"] : interaction.surpriseInsight ? ["⚡ Insight"] : [counterpart.relationship]}
+                interactionCount={counterpart?.interactionCount || 1}
+                tags={interaction.saveEvent ? ["★ Save"] : interaction.surpriseInsight ? ["⚡ Insight"] : []}
               />
             )}
           </AnimatePresence>
@@ -295,7 +290,22 @@ export function GlassHUD() {
             )}
           </AnimatePresence>
 
-          {/* Conversation flow — bottom center */}
+          {/* Status bar — above conversation, bottom-center area */}
+          <AnimatePresence>
+            {hudVisible && playState !== "pre-interaction" && currentSlice && (
+              <TopStatusBar
+                time={interactionTime}
+                bpm={currentSlice.avgBpm}
+                baselineBpm={userProfile.baselineBpm}
+                emotionalState={currentSlice.emotionalState}
+                counterpartName={counterpart?.name || "Unknown"}
+                counterpartInteractionCount={counterpart?.interactionCount || 0}
+                satisfactionScore={satisfactionScore}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Conversation flow — below status bar */}
           <AnimatePresence>
             {playState !== "pre-interaction" && (
               <ConversationFlow

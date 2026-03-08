@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Play, Pause, SkipForward, SkipBack, Eye, EyeOff } from "lucide-react";
+import { Play, Square, SkipForward, SkipBack, Eye, EyeOff } from "lucide-react";
 import type { PlayState } from "./GlassHUD";
 
 interface HUDControlsProps {
@@ -51,7 +51,7 @@ export function HUDControls({
             onClick={onTogglePlay}
             className="p-1.5 text-white/35 hover:text-white/70 transition-colors bg-white/[0.03] border border-white/[0.08] rounded"
           >
-            {playState === "playing" ? <Pause size={12} /> : <Play size={12} />}
+            {playState === "playing" ? <Square size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />}
           </button>
         ) : null}
 

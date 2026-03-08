@@ -10,120 +10,94 @@ interface ConversationFlowProps {
 export function ConversationFlow({ interaction, currentIndex, counterpartName }: ConversationFlowProps) {
   if (currentIndex < 0) return null;
 
-  const currentTurn = interaction.transcript[currentIndex];
-  const prevTurn = currentIndex > 0 ? interaction.transcript[currentIndex - 1] : null;
+  // Find the most recent turn for each speaker type up to the current index
+  const turnsUpToCurrent = interaction.transcript.slice(0, currentIndex + 1);
+  
+  // Find the last turn for each speaker by scanning backwards through the current transcript slice
+  let lastUserTurn = null;
+  let lastOtherTurn = null;
+  let lastUserIndex = -1;
+  let lastOtherIndex = -1;
 
-  if (!currentTurn) return null;
-
-  const isUser = currentTurn.speaker === "user";
-  const prevIsUser = prevTurn ? prevTurn.speaker === "user" : false;
+  for (let i = turnsUpToCurrent.length - 1; i >= 0; i--) {
+    const turn = turnsUpToCurrent[i];
+    if (turn.speaker === "user" && !lastUserTurn) {
+      lastUserTurn = turn;
+      lastUserIndex = i;
+    } else if (turn.speaker !== "user" && !lastOtherTurn) {
+      lastOtherTurn = turn;
+      lastOtherIndex = i;
+    }
+  }
 
   const truncate = (text: string, max: number) =>
     text.length > max ? text.slice(0, max) + "…" : text;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      className="absolute bottom-16 left-1/2 -translate-x-1/2 w-[560px] max-w-[90%] z-20 pointer-events-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[640px] max-w-[92%] z-20 pointer-events-none flex flex-col gap-6"
       style={{ fontFamily: "'JetBrains Mono', monospace" }}
     >
-      <div className="flex flex-col w-full">
-        {/* Previous turn — fading context */}
-        <AnimatePresence mode="popLayout">
-          {prevTurn && (
-            <motion.div
-              key={`prev-${currentIndex - 1}`}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 0.15, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.4 }}
-              className="mb-2 w-full"
-            >
-              <div className={`flex items-center gap-2 mb-0.5 ${prevIsUser ? "justify-end" : "justify-start"}`}>
-                {!prevIsUser && (
-                  <>
-                    <span className="text-white/10 text-[9px] tracking-wider uppercase">
-                      {prevTurn.speakerName}
-                    </span>
-                    <span className="text-white/[0.06] text-[8px]">
-                      {prevTurn.timestamp.substring(0, 5)}
-                    </span>
-                  </>
-                )}
-                {prevIsUser && (
-                  <>
-                    <span className="text-white/[0.06] text-[8px]">
-                      {prevTurn.timestamp.substring(0, 5)}
-                    </span>
-                    <span className="text-white/10 text-[9px] tracking-wider uppercase">
-                      {prevTurn.speakerName}
-                    </span>
-                  </>
-                )}
-              </div>
-              <p className={`text-white/10 text-[10px] line-clamp-1 tracking-wide ${prevIsUser ? "text-right" : "text-left"}`}>
-                {truncate(prevTurn.text, 150)}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="flex flex-col gap-8">
+        {/* Other Person's Talk - Left Aligned */}
+        <div className="w-full flex justify-start">
+          <AnimatePresence mode="popLayout">
+            {lastOtherTurn && (
+              <motion.div
+                key={`other-turn-${lastOtherIndex}`}
+                initial={{ opacity: 0, x: -15, filter: "blur(4px)" }}
+                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, x: -10, filter: "blur(2px)" }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="max-w-[85%]"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/30 shadow-[0_0_10px_rgba(255,255,255,0.4)]" />
+                  <span className="text-[10px] tracking-[0.25em] uppercase text-white/60">
+                    {lastOtherTurn.speakerName}
+                  </span>
+                  <span className="text-white/[0.18] text-[9px] font-light">
+                    {lastOtherTurn.timestamp.substring(0, 5)}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed tracking-wide text-white text-left pl-4 border-l-2 border-white/20">
+                  {lastOtherTurn.text.length > 250 ? truncate(lastOtherTurn.text, 250) : lastOtherTurn.text}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-        {/* Current turn */}
-        <AnimatePresence mode="popLayout">
-          <motion.div
-            key={`current-${currentIndex}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="w-full"
-          >
-            <div className={`flex items-center gap-2 mb-1 ${isUser ? "justify-end" : "justify-start"}`}>
-              {!isUser && (
-                <>
-                  <div className="w-1 h-1 rounded-full bg-white/20" />
-                  <span className="text-[10px] tracking-wider uppercase text-white/25">
-                    {currentTurn.speakerName}
+        {/* User's Talk - Right Aligned */}
+        <div className="w-full flex justify-end">
+          <AnimatePresence mode="popLayout">
+            {lastUserTurn && (
+              <motion.div
+                key={`user-turn-${lastUserIndex}`}
+                initial={{ opacity: 0, x: 15, filter: "blur(4px)" }}
+                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, x: 10, filter: "blur(2px)" }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="max-w-[85%]"
+              >
+                <div className="flex items-center gap-2 mb-2 justify-end">
+                  <span className="text-white/[0.18] text-[9px] font-light">
+                    {lastUserTurn.timestamp.substring(0, 5)}
                   </span>
-                  <span className="text-white/[0.08] text-[8px]">
-                    {currentTurn.timestamp.substring(0, 5)}
-                  </span>
-                </>
-              )}
-              {isUser && (
-                <>
-                  <span className="text-white/[0.08] text-[8px]">
-                    {currentTurn.timestamp.substring(0, 5)}
-                  </span>
-                  <span className="text-[10px] tracking-wider uppercase text-blue-400/50">
+                  <span className="text-[10px] tracking-[0.25em] uppercase text-blue-400/80">
                     YOU
                   </span>
-                  <div className="w-1 h-1 rounded-full bg-blue-400/40" />
-                </>
-              )}
-            </div>
-            <p
-              className={`text-sm leading-relaxed tracking-wide ${
-                isUser ? "text-center text-white/80" : "text-center text-white/70"
-              }`}
-            >
-              {currentTurn.text.length > 150 ? truncate(currentTurn.text, 150) : currentTurn.text}
-            </p>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Subtle divider line */}
-        <motion.div
-          className={`mt-3 h-[1px] w-full ${isUser ? "ml-auto" : "mr-auto"}`}
-          animate={{
-            background: isUser
-              ? "linear-gradient(270deg, rgba(100, 181, 246, 0.25) 0%, transparent 100%)"
-              : "linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%)",
-          }}
-          transition={{ duration: 0.5 }}
-        />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500/60 shadow-[0_0_10px_rgba(59,130,246,0.4)]" />
+                </div>
+                <p className="text-sm leading-relaxed tracking-wide text-white text-right pr-4 border-r-2 border-blue-500/40">
+                  {lastUserTurn.text.length > 250 ? truncate(lastUserTurn.text, 250) : lastUserTurn.text}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </motion.div>
   );
