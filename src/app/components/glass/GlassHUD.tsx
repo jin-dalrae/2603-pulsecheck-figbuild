@@ -4,6 +4,7 @@ import { allInteractions, getProfile, userProfile } from "../../data";
 import type { HeartbeatSlice, EmotionalState } from "../../data";
 import { BiometricOverlay } from "./BiometricOverlay";
 import { TopStatusBar } from "./TopStatusBar";
+import { TopHeader } from "./TopHeader";
 import { NudgeSystem } from "./NudgeSystem";
 import { PeripheralGlow } from "./PeripheralGlow";
 import { PreInteractionPrompt } from "./PreInteractionPrompt";
@@ -161,10 +162,10 @@ export function GlassHUD() {
 
   // Handle interaction changes properly
   useEffect(() => {
-    if (currentTranscriptIndex === -1) {
+    if (currentTranscriptIndex === -1 && playState === "pre-interaction") {
       startPlayback();
     }
-  }, [currentInteractionIndex, currentTranscriptIndex, startPlayback]);
+  }, [currentInteractionIndex, startPlayback, playState, currentTranscriptIndex]);
 
   useEffect(() => {
     return () => {
@@ -253,6 +254,15 @@ export function GlassHUD() {
             transformOrigin: 'center bottom',
           }}
         >
+          {/* Top Header — above conversation, top-center area */}
+          <AnimatePresence>
+            {hudVisible && playState !== "pre-interaction" && counterpart && (
+              <TopHeader
+                counterpartName={counterpart.name}
+                counterpartInteractionCount={counterpart.interactionCount}
+              />
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Bottom HUD group — warps slightly upward toward center */}

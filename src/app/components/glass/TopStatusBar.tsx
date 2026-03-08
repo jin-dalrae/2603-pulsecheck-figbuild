@@ -89,9 +89,9 @@ export function TopStatusBar({
       style={{ fontFamily: "'JetBrains Mono', monospace" }}
     >
       {/* Single compact bar — all info in one horizontal strip */}
-      <div className="flex items-center gap-4 px-5 py-2.5 rounded-xl bg-black/40 border border-white/[0.06] backdrop-blur-sm">
-        {/* Heart rate */}
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-5 px-6 py-3.5 rounded-xl bg-black/50 border border-white/[0.08] backdrop-blur-md">
+        {/* Heart rate - LARGER */}
+        <div className="flex items-center gap-2.5">
           <motion.div
             className="relative flex items-center justify-center"
             animate={{ scale: [1, 1.2, 1, 1.1, 1] }}
@@ -103,8 +103,8 @@ export function TopStatusBar({
           >
             <svg
               viewBox="0 0 24 22"
-              className="w-5 h-5"
-              style={{ filter: `drop-shadow(0 0 8px ${heartGlow})` }}
+              className="w-7 h-7"
+              style={{ filter: `drop-shadow(0 0 10px ${heartGlow})` }}
             >
               <path
                 d="M12 21 C12 21 1.5 14 1.5 7 C1.5 3.5 4.5 1 7.5 1 C9.5 1 11 2.5 12 4 C13 2.5 14.5 1 16.5 1 C19.5 1 22.5 3.5 22.5 7 C22.5 14 12 21 12 21Z"
@@ -118,13 +118,13 @@ export function TopStatusBar({
             key={bpm}
             initial={{ opacity: 0.5 }}
             animate={{ opacity: 1 }}
-            className="text-sm tracking-tight"
-            style={{ color: heartColor, textShadow: `0 0 10px ${heartGlow}, ${textShadow}` }}
+            className="text-xl font-bold tracking-tight"
+            style={{ color: heartColor, textShadow: `0 0 12px ${heartGlow}, ${textShadow}` }}
           >
             {bpm}
           </motion.span>
           <span
-            className="text-white/50 text-[9px] tracking-wider uppercase"
+            className="text-white/50 text-xs tracking-wider uppercase font-bold"
             style={{ textShadow }}
           >
             BPM
@@ -132,13 +132,13 @@ export function TopStatusBar({
         </div>
 
         {/* Separator */}
-        <div className="w-[1px] h-4 bg-white/15" />
+        <div className="w-[1px] h-5 bg-white/20" />
 
-        {/* Mood */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" }}>{emotionEmoji[emotionalState]}</span>
+        {/* Mood - LARGER */}
+        <div className="flex items-center gap-2.5">
+          <span className="text-xl" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.7))" }}>{emotionEmoji[emotionalState]}</span>
           <span
-            className="text-[11px] tracking-wider uppercase"
+            className="text-sm tracking-wider uppercase font-bold"
             style={{ color: moodColor, textShadow }}
           >
             {emotionalState}
@@ -146,55 +146,16 @@ export function TopStatusBar({
         </div>
 
         {/* Separator */}
-        <div className="w-[1px] h-4 bg-white/15" />
+        <div className="w-[1px] h-5 bg-white/20" />
 
-        {/* Weather */}
-        <div className="flex items-center gap-1.5">
-          <svg
-            viewBox="0 0 24 24"
-            className="w-4 h-4 text-yellow-400/70"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" }}
-          >
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-          </svg>
-          <span
-            className="text-white/60 text-[11px] tracking-wider"
-            style={{ textShadow }}
-          >
-            72°F
-          </span>
-        </div>
-      </div>
-
-      {/* Counterpart info row — below main bar */}
-      <div className="flex items-center justify-center gap-3 mt-1.5">
-        <span
-          className="text-white/70 text-[11px] tracking-wide"
-          style={{ textShadow }}
-        >
-          {counterpartName}
-        </span>
-        <div className="w-[1px] h-3 bg-white/15" />
-        <span
-          className="text-white/40 text-[10px] tracking-wider"
-          style={{ textShadow }}
-        >
-          {counterpartInteractionCount} interactions
-        </span>
-        <div className="w-[1px] h-3 bg-white/15" />
-        <div className="flex items-center gap-1.5">
+        {/* Satisfaction */}
+        <div className="flex items-center gap-2">
           <div
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: satisfactionColor, boxShadow: `0 0 6px ${satisfactionColor}` }}
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: satisfactionColor, boxShadow: `0 0 8px ${satisfactionColor}` }}
           />
           <span
-            className="text-[10px] tracking-wider uppercase"
+            className="text-xs tracking-wider uppercase font-bold"
             style={{ color: satisfactionColor, textShadow }}
           >
             {satisfactionLabel}

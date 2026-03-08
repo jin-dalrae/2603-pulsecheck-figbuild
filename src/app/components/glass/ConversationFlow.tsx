@@ -37,11 +37,11 @@ export function ConversationFlow({ interaction, currentIndex, counterpartName }:
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[640px] max-w-[92%] z-20 pointer-events-none flex flex-col gap-6"
+      className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[720px] max-w-[92%] z-20 pointer-events-none flex flex-col gap-6"
       style={{ fontFamily: "'JetBrains Mono', monospace" }}
     >
-      <div className="flex flex-col gap-8">
-        {/* Other Person's Talk - Left Aligned */}
+      <div className="flex flex-col gap-10">
+        {/* Other Person's Talk - Left Aligned, LARGER */}
         <div className="w-full flex justify-start">
           <AnimatePresence mode="popLayout">
             {lastOtherTurn && (
@@ -53,16 +53,16 @@ export function ConversationFlow({ interaction, currentIndex, counterpartName }:
                 transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
                 className="max-w-[85%]"
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white/30 shadow-[0_0_10px_rgba(255,255,255,0.4)]" />
-                  <span className="text-[10px] tracking-[0.25em] uppercase text-white/60">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className="w-2 h-2 rounded-full bg-white/40 shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
+                  <span className="text-xs tracking-[0.25em] uppercase text-white/70 font-bold">
                     {lastOtherTurn.speakerName}
                   </span>
-                  <span className="text-white/[0.18] text-[9px] font-light">
+                  <span className="text-white/[0.25] text-[10px] font-light">
                     {lastOtherTurn.timestamp.substring(0, 5)}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed tracking-wide text-white text-left pl-4 border-l-2 border-white/20">
+                <p className="text-xs leading-relaxed tracking-wide text-white text-left pl-5 border-l-[3px] border-white/25 font-medium">
                   {lastOtherTurn.text.length > 250 ? truncate(lastOtherTurn.text, 250) : lastOtherTurn.text}
                 </p>
               </motion.div>
@@ -70,7 +70,7 @@ export function ConversationFlow({ interaction, currentIndex, counterpartName }:
           </AnimatePresence>
         </div>
 
-        {/* User's Talk - Right Aligned */}
+        {/* User's Talk - Right Aligned, LARGER */}
         <div className="w-full flex justify-end">
           <AnimatePresence mode="popLayout">
             {lastUserTurn && (
@@ -82,16 +82,16 @@ export function ConversationFlow({ interaction, currentIndex, counterpartName }:
                 transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
                 className="max-w-[85%]"
               >
-                <div className="flex items-center gap-2 mb-2 justify-end">
-                  <span className="text-white/[0.18] text-[9px] font-light">
+                <div className="flex items-center gap-2.5 mb-2.5 justify-end">
+                  <span className="text-white/[0.25] text-[10px] font-light">
                     {lastUserTurn.timestamp.substring(0, 5)}
                   </span>
-                  <span className="text-[10px] tracking-[0.25em] uppercase text-blue-400/80">
+                  <span className="text-xs tracking-[0.25em] uppercase text-blue-400 font-bold">
                     YOU
                   </span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500/60 shadow-[0_0_10px_rgba(59,130,246,0.4)]" />
+                  <div className="w-2 h-2 rounded-full bg-blue-500/70 shadow-[0_0_12px_rgba(59,130,246,0.5)]" />
                 </div>
-                <p className="text-sm leading-relaxed tracking-wide text-white text-right pr-4 border-r-2 border-blue-500/40">
+                <p className="text-xs leading-relaxed tracking-wide text-white text-right pr-5 border-r-[3px] border-blue-500/50 font-medium">
                   {lastUserTurn.text.length > 250 ? truncate(lastUserTurn.text, 250) : lastUserTurn.text}
                 </p>
               </motion.div>
