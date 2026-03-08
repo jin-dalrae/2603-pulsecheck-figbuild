@@ -1,4 +1,4 @@
-# Pulse: The Future of Emotional Intelligence (Seed Round Pitch Deck)
+# Pulse: The Future of Emotional Intelligence
 
 > **"Bridging the Gap Between Human Intent and Perception Through AR-Powered EQ."**
 
