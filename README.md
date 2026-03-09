@@ -2,6 +2,8 @@
 
 > **"Bridging the Gap Between Human Intent and Perception Through AR-Powered EQ."**
 
+- Figbuild 2026 submission
+Rae Jin, Gabriel Tan (CCA MDES)
 ---
 
 ## 🚀 The Vision
